@@ -1,0 +1,8 @@
+{
+    "chat_completion_type": "OpenAi",
+    "proxy_url": "https:api.open_ai.com",
+    "proxy_password": "<PASSWORD>",
+    "module": "gpt-4o-mini",
+    "max_tokens": 1000,
+    "temperature": 0.5
+}
