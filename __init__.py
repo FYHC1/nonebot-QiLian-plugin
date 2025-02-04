@@ -30,12 +30,11 @@ __plugin_meta__ = PluginMetadata(
 
 from .messages.messages import Messages
 from .open_ai.open_ai import Open_Ai
+from .preset.preset_manage import PresetManage
 
 from .user.group_user import GroupUser
 from .user.private_user import PrivateUser
-
-
-
+from .util.RegexProcess import RegexProcessor
 
 ###
 character=Character()
@@ -44,7 +43,9 @@ group_user=GroupUser()
 chat = Chat()
 messages = Messages()
 open_ai = Open_Ai()
-
+private_prompt_manage=PresetManage("private")
+group_prompt_manage=PresetManage("group")
+regex_process=RegexProcessor()
 
 
 
@@ -124,9 +125,11 @@ async def role_play_chat(event:GroupMessageEvent, bot:Bot):
 
 
     chat_history=await chat.get_context()
-    chat_messages=messages.construct_messages(character.preset_list,character.prompts_list,chat_history)
+    chat_messages=messages.construct_messages(group_prompt_manage.get_order_prompts(),character.prompts_list,chat_history)
     #print(json.dumps(messages, indent=4, ensure_ascii=False))
     assistant_reply = await open_ai.start_chat(chat_messages)
+    regex_process.get_patterns(group_prompt_manage.get_preset_name())
+    assistant_reply="\n"+regex_process.process(assistant_reply)
     await chat.save_chat_message(assistant_reply)
     await role_play.finish(MessageSegment.at(group_user.user_id)+Message(assistant_reply))
 
@@ -151,9 +154,11 @@ async def role_play_chat1(event:PrivateMessageEvent,bot:Bot):
     messages.from_user(private_user)
 
     chat_history = await chat.get_context()
-    chat_messages = messages.construct_messages(character.preset_list,character.prompts_list, chat_history)
+    chat_messages = messages.construct_messages(private_prompt_manage.get_order_prompts(),character.prompts_list, chat_history)
     # print(json.dumps(messages, indent=4, ensure_ascii=False))
     assistant_reply = await open_ai.start_chat(chat_messages)
+    regex_process.get_patterns(private_prompt_manage.get_preset_name())
+    assistant_reply = regex_process.process(assistant_reply)
     await chat.save_chat_message(assistant_reply)
     await role_play.finish(MessageSegment.at(private_user.user_id)+Message(assistant_reply))
 

@@ -1,0 +1,17 @@
+{
+    "id": "af6da998-722b-4f24-8816-9010fcd73b9a",
+    "scriptName": "MyGO!!!!!",
+    "findRegex": "/(?:<npc response[^>]*>|<StatusBlock[^>]*>)(.|\\n)*?<\\/(?:npc response|StatusBlock)>/gm",
+    "replaceString": "",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": false,
+    "promptOnly": true,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": 4,
+    "maxDepth": null
+}

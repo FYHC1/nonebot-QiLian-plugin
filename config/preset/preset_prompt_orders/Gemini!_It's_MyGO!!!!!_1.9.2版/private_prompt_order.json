@@ -1,0 +1,434 @@
+{
+  "order": [
+      {
+        "name": "说明",
+        "identifier": "2d917c04-29b6-4c37-be3c-0cf7d981b001",
+        "enabled": false
+      },
+      {
+        "name": "小说模式教程",
+        "identifier": "edcb8312-24c1-4c13-aadf-da8628b42a48",
+        "enabled": false
+      },
+      {
+        "name": "状态栏包裹教程",
+        "identifier": "d9be6cbd-f7d6-41b0-9081-d55f04f06cb6",
+        "enabled": false
+      },
+      {
+        "name": "Main Prompt",
+        "identifier": "main",
+        "enabled": true
+      },
+      {
+        "name": "<Game Materials>",
+        "identifier": "c06619a7-94e3-471d-8d7e-f56424679be7",
+        "enabled": true
+      },
+      {
+        "name": "World Info (before)",
+        "identifier": "worldInfoBefore",
+        "enabled": true
+      },
+      {
+        "name": "<Human>",
+        "identifier": "26491dde-0d6a-4a07-9151-0ca42555059e",
+        "enabled": true
+      },
+      {
+        "name": "Persona Description",
+        "identifier": "personaDescription",
+        "enabled": true
+      },
+      {
+        "name": "</Human>",
+        "identifier": "cbe4f15d-878c-4222-8d6b-f72d8a29b4c2",
+        "enabled": true
+      },
+      {
+        "name": "Char Description",
+        "identifier": "charDescription",
+        "enabled": true
+      },
+      {
+        "name": "Char Personality",
+        "identifier": "charPersonality",
+        "enabled": true
+      },
+      {
+        "name": "Scenario",
+        "identifier": "scenario",
+        "enabled": true
+      },
+      {
+        "name": "Enhance Definitions",
+        "identifier": "enhanceDefinitions",
+        "enabled": false
+      },
+      {
+        "name": "NSFW Prompt",
+        "identifier": "nsfw",
+        "enabled": false
+      },
+      {
+        "name": "World Info (after)",
+        "identifier": "worldInfoAfter",
+        "enabled": true
+      },
+      {
+        "name": "Chat Examples",
+        "identifier": "dialogueExamples",
+        "enabled": true
+      },
+      {
+        "name": "<Story So Far>",
+        "identifier": "b7c174ea-0f4d-452e-9a4b-ab7eb93bdac9",
+        "enabled": true
+      },
+      {
+        "name": "Chat History",
+        "identifier": "chatHistory",
+        "enabled": true
+      },
+      {
+        "name": "</Story So Far>",
+        "identifier": "abedbf15-f36a-4a4f-a80f-bc053220ac36",
+        "enabled": true
+      },
+      {
+        "name": "<Current Model Mode>",
+        "identifier": "0ba57ac8-1d95-4aa1-8626-268a63243cc2",
+        "enabled": true
+      },
+      {
+        "name": "📖小说模式({{user}}第一人称)",
+        "identifier": "e56b7f0b-83fa-45f0-92c5-1a41d58c176b",
+        "enabled": false
+      },
+      {
+        "name": "📖小说模式(参与扮演)",
+        "identifier": "ca0d6abc-b6f6-4323-89c9-d9babd6d4e75",
+        "enabled": false
+      },
+      {
+        "name": "📖小说模式(不参与扮演)",
+        "identifier": "81ef5c84-6ecd-4240-b0c0-3e8c49c87cd7",
+        "enabled": false
+      },
+      {
+        "name": "💬角色扮演模式(防抢话)",
+        "identifier": "03e9c451-c02d-4ffc-982c-7c85579edfdd",
+        "enabled": true
+      },
+      {
+        "name": "💬角色扮演模式(角色第一人称)",
+        "identifier": "2155ec73-aead-4d4e-9669-9155c4597ca5",
+        "enabled": false
+      },
+      {
+        "name": "⭐附加功能",
+        "identifier": "7190b776-e649-412e-8853-18a48c423e83",
+        "enabled": true
+      },
+      {
+        "name": "⚙️防止升华",
+        "identifier": "ca7b18c0-db61-4181-b78e-3cd36074ffaa",
+        "enabled": true
+      },
+      {
+        "name": "⚙️台词占比",
+        "identifier": "ae931d4f-63a0-4010-88f1-07c50a4917af",
+        "enabled": false
+      },
+      {
+        "name": "⚙️翻译(1219开启)",
+        "identifier": "adb19c12-5774-47ef-88f4-23020764dd23",
+        "enabled": true
+      },
+      {
+        "name": "⚙️心理描写(可选)",
+        "identifier": "a4a9fcb2-ede5-41ff-95c7-ffc0fb25e128",
+        "enabled": false
+      },
+      {
+        "name": "⚙️避免过多提问(角色扮演模式)",
+        "identifier": "8119f953-9daf-47e4-a695-86ee368738d4",
+        "enabled": false
+      },
+      {
+        "name": "⚙️防打扰(可选)",
+        "identifier": "a335f293-27be-46af-a404-bb50914093fd",
+        "enabled": false
+      },
+      {
+        "name": "⚙️简短回复模式(可选)",
+        "identifier": "c358f8cb-8905-4c2b-9226-3db56ee188e8",
+        "enabled": false
+      },
+      {
+        "name": "</Current Model Mode>",
+        "identifier": "54841ad6-1d17-42ca-a729-def8b7ceb8f2",
+        "enabled": true
+      },
+      {
+        "name": "<Gameplay Mechanics>",
+        "identifier": "016e730b-c270-4b31-a3d6-a1e9b4bc2fbe",
+        "enabled": true
+      },
+      {
+        "name": "⚙️角色塑造(原版)",
+        "identifier": "7effd567-8c6e-4b79-af9a-02cd137a1425",
+        "enabled": false
+      },
+      {
+        "name": "⚙️角色塑造(新版)",
+        "identifier": "5f3ac256-92a7-4cca-bdac-e80b3890854e",
+        "enabled": true
+      },
+      {
+        "name": "⚙️写作技巧与注意事项",
+        "identifier": "b7a1e944-2b6f-4935-a807-28d2957bad06",
+        "enabled": true
+      },
+      {
+        "name": "⚙️感官细节通用准则(可选)",
+        "identifier": "85b9c35b-3953-45ba-9ae4-3089b5e5e8ce",
+        "enabled": false
+      },
+      {
+        "name": "⚙️声音描写准则(可选)",
+        "identifier": "1d9a893f-451c-46e5-9f39-b44d6b55b7b1",
+        "enabled": false
+      },
+      {
+        "name": "⚙️女性外貌描写准则(可选)",
+        "identifier": "075319f1-a423-4d86-b655-435d3d4cc727",
+        "enabled": false
+      },
+      {
+        "name": "⚙️性爱场景描写准则(可选)",
+        "identifier": "dbb10cac-0fe2-49ef-9164-c4c6be2b6680",
+        "enabled": true
+      },
+      {
+        "name": "⚙️暴力场景描写准则(可选)",
+        "identifier": "25480225-8584-42b0-b79d-3fa2208c5f19",
+        "enabled": false
+      },
+      {
+        "name": "⚙️逻辑强化",
+        "identifier": "f79d4f24-3a1d-4358-91db-3eb7fb214664",
+        "enabled": true
+      },
+      {
+        "name": "⚙️格式规范",
+        "identifier": "dd8449c1-45fc-4d70-ae20-6f9e69c44b86",
+        "enabled": true
+      },
+      {
+        "name": "</Gameplay Mechanics>",
+        "identifier": "f7182411-eaac-4575-859c-e3461887f7a0",
+        "enabled": true
+      },
+      {
+        "name": "</Game Materials>",
+        "identifier": "2dcf230f-7db7-4e07-a9b0-8e4b1ac24373",
+        "enabled": true
+      },
+      {
+        "name": "<story plot>",
+        "identifier": "5708fc9f-953f-4b3b-8fbf-020571856dc4",
+        "enabled": true
+      },
+      {
+        "name": "<COT开始>",
+        "identifier": "e4ec9e5d-e56e-43e4-ae7a-025dc8090021",
+        "enabled": false
+      },
+      {
+        "name": "<1219COT开始>",
+        "identifier": "f1b0ef79-59cc-4d3d-91ae-3dd8872615c8",
+        "enabled": true
+      },
+      {
+        "name": "✅步骤(注意事项)",
+        "identifier": "291ba2d0-681c-4b26-ab42-0dff0fa27efe",
+        "enabled": true
+      },
+      {
+        "name": "📂步骤(情景分析)",
+        "identifier": "3acc9777-6318-4eba-aff7-359bf7759a90",
+        "enabled": true
+      },
+      {
+        "name": "📂步骤(小说模式开启)",
+        "identifier": "ab5ddbba-0d4c-4ce9-9934-b04fadd2b86a",
+        "enabled": false
+      },
+      {
+        "name": "📜步骤(网上冲浪文风)",
+        "identifier": "e24c16d9-4606-40f0-b3ab-aeaf460057c2",
+        "enabled": false
+      },
+      {
+        "name": "📜步骤(“中二”文风)",
+        "identifier": "6ac82787-21a6-44f7-a6cc-e7439cdf4b59",
+        "enabled": false
+      },
+      {
+        "name": "📜步骤(诗意文风)",
+        "identifier": "2c5dee0d-1678-4b3a-b223-11f2775a037c",
+        "enabled": false
+      },
+      {
+        "name": "📜步骤(色情文风)",
+        "identifier": "2bea654c-e2e9-4680-8270-7e1eb6f530f4",
+        "enabled": false
+      },
+      {
+        "name": "📜步骤(写实记录文风)",
+        "identifier": "64a5b318-c45d-4636-980c-6e4ef8e395be",
+        "enabled": false
+      },
+      {
+        "name": "📜步骤(乡土文风)",
+        "identifier": "aba527eb-cf10-41f4-a506-2b18c1294059",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(强调禁词)(1206不需要开启)",
+        "identifier": "db34a15f-a314-432f-a5f4-7d248cf82555",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(NPC话唠化)",
+        "identifier": "6ccddc95-5e06-4c5c-893a-f332ae9d37e4",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(推动剧情发展)",
+        "identifier": "029d21de-8254-426c-a2fe-bd600c9ee7f3",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(角色扮演如何创作NPC的反应)",
+        "identifier": "dc363d0c-9a15-485e-982f-4604b03fc3c9",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(NPC反应强化)",
+        "identifier": "ff102aac-7d60-48e2-8368-6ed0b1538518",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(格式强化)(前端卡专用)",
+        "identifier": "6858ec54-3c09-43f9-8cfb-5347aeac2bde",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(格式强化2)(前端卡专用)",
+        "identifier": "2cbc62dd-bfac-41a8-ae47-bdd2ac063190",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(防抢话)",
+        "identifier": "ee4571aa-f525-495d-8ace-b02cf0ee101b",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(强力防抢话)",
+        "identifier": "81e09b03-7ec7-47db-9d07-0ceee8072f6e",
+        "enabled": false
+      },
+      {
+        "name": "💡步骤(防重复)(不要常开)",
+        "identifier": "bb9f1758-4fb2-4bee-ac2c-6b1d2e827bb9",
+        "enabled": true
+      },
+      {
+        "name": "</COT结束>",
+        "identifier": "d573dde3-43b7-48d7-a40c-d106ebbca182",
+        "enabled": true
+      },
+      {
+        "name": "✨正文标签",
+        "identifier": "d65f51df-164f-4f18-b165-a3eeaf892315",
+        "enabled": true
+      },
+      {
+        "name": "📄正文(搭配摘要)",
+        "identifier": "0170f6c7-8223-464f-8c4b-adda084c92da",
+        "enabled": false
+      },
+      {
+        "name": "📄正文(不搭配摘要)",
+        "identifier": "ddf784ae-ebfc-43cb-b7b5-92f9d135e31f",
+        "enabled": true
+      },
+      {
+        "name": "💬分步式创作正文(搭配摘要)",
+        "identifier": "71217df9-83f1-4d48-82dd-df32f5c01acd",
+        "enabled": false
+      },
+      {
+        "name": "💬分步式创作正文(不搭配摘要)",
+        "identifier": "1733192d-4192-480d-8460-f171dac3756d",
+        "enabled": false
+      },
+      {
+        "name": "🧩识图强化(可选)",
+        "identifier": "5b040e91-1148-4c2e-86e1-1837a8858b3d",
+        "enabled": false
+      },
+      {
+        "name": "🧩摘要(可选)",
+        "identifier": "5478ee74-cf48-4905-b2b1-7267683819a0",
+        "enabled": false
+      },
+      {
+        "name": "🧩状态栏(可选)",
+        "identifier": "c28fc27e-eb10-41b8-891d-084300e7a520",
+        "enabled": false
+      },
+      {
+        "name": "🧩防止代码化",
+        "identifier": "ef2eafd0-68c8-4f21-88d2-0c3e6315a148",
+        "enabled": true
+      },
+      {
+        "name": "</story plot>",
+        "identifier": "d2c3ab9d-6e80-4cd7-b59a-db2d6a3f5b82",
+        "enabled": true
+      },
+      {
+        "name": "⚠️创作目标(加强防截断)",
+        "identifier": "0196cf05-d08a-48f8-b18e-e811c6903df4",
+        "enabled": false
+      },
+      {
+        "name": "⚠️反和谐(加强防截断)",
+        "identifier": "ffcf7f81-5185-47df-997f-9cbbeedd0872",
+        "enabled": false
+      },
+      {
+        "name": "⚠️免责声明1号(截断开启)",
+        "identifier": "efba5169-9e17-4175-9c58-ea79724d67be",
+        "enabled": false
+      },
+      {
+        "name": "⚠️免责声明2号(截断开启)",
+        "identifier": "050258e2-9585-40b4-b1f4-929ba7ebfc1c",
+        "enabled": false
+      },
+      {
+        "name": "🎮开始游戏",
+        "identifier": "jailbreak",
+        "enabled": true
+      },
+      {
+        "name": "🕹️继续",
+        "identifier": "bdd5dfb3-a1e6-42a5-9bd7-eac3851fc0d1",
+        "enabled": true
+      }
+    ]
+}

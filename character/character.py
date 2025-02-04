@@ -18,8 +18,8 @@ class Character(CharacterCard):
         self.character_list = []
         self.group_character_list = {}
         self.private_character_list = {}
-        self.preset_list={}
-        self.prompts_list = {}
+        #self.preset_list={}
+        self.prompts_list:dict = {}
         self.set_init()
 
     def set_init(self):
@@ -29,7 +29,7 @@ class Character(CharacterCard):
             self.character_list = character_config['character_list']
             self.group_character_list = dict(character_config['group_character_list'])
             self.private_character_list = dict(character_config['private_character_list'])
-            self.preset_list = self.get_preset_list()
+            #self.preset_list = self.get_preset_list()
             self.prompts_list = self.get_prompts_list()
 
     # 获取角色卡列表
@@ -90,43 +90,62 @@ class Character(CharacterCard):
             #print(preset_list)
         return preset_list
 
-    def get_prompts_list(self):
+    # def get_prompts_list(self):
+    #     list_dir = os.listdir(self.card_json_dir)
+    #     prompts = {}
+    #
+    #     for character_name in self.character_list:
+    #         if f"{character_name}.json" in list_dir:
+    #             character_card = CharacterCard.from_json(os.path.join(self.card_json_dir, f"{character_name}.json"))
+    #             preset_list = self.get_preset_list()
+    #             prompt_name_list = ["preset_main_prompt", "description", "personality", \
+    #                                 "scenario", "preset_other_prompt","new_chat", "first_mes"]
+    #             summary = dict(character_card.display_summary())
+    #             character_prompts = {}
+    #             for message_type in ["private", "group"]:
+    #                 character_prompt = []
+    #                 preset = dict(preset_list.get(message_type, {}))
+    #                 summary["preset_main_prompt"] = preset["preset_main_prompt"]
+    #                 summary["description"] = preset["description_format"] + summary["description"]
+    #                 if summary["personality"]:
+    #                     summary["personality"] = preset["personality_format"] + summary["personality"]
+    #                 if summary["scenario"]:
+    #                     summary["scenario"] = preset["scenario_format"] + summary["scenario"]
+    #                 summary["preset_other_prompt"]=preset["preset_nsfw_prompt"]+ preset["preset_enhance_prompt"]
+    #                 summary["new_chat"] = preset["new_chat_prompt"]
+    #                 for prompt_name in prompt_name_list:
+    #                     character_prompt.append(summary[prompt_name])
+    #                 character_prompts[message_type] =character_prompt
+    #
+    #             prompts[character_name] = character_prompts
+    #             #print(prompts)
+    #
+    #     return prompts
+
+    def get_prompts_list(self) -> dict:
         list_dir = os.listdir(self.card_json_dir)
         prompts = {}
-
         for character_name in self.character_list:
             if f"{character_name}.json" in list_dir:
                 character_card = CharacterCard.from_json(os.path.join(self.card_json_dir, f"{character_name}.json"))
-                preset_list = self.get_preset_list()
-                prompt_name_list = ["preset_main_prompt", "description", "personality", \
-                                    "scenario", "preset_other_prompt","new_chat", "first_mes"]
-                summary = dict(character_card.display_summary())
-                character_prompts = {}
-                for message_type in ["private", "group"]:
-                    character_prompt = []
-                    preset = dict(preset_list.get(message_type, {}))
-                    summary["preset_main_prompt"] = preset["preset_main_prompt"]
-                    summary["description"] = preset["description_format"] + summary["description"]
-                    if summary["personality"]:
-                        summary["personality"] = preset["personality_format"] + summary["personality"]
-                    if summary["scenario"]:
-                        summary["scenario"] = preset["scenario_format"] + summary["scenario"]
-                    summary["preset_other_prompt"]=preset["preset_nsfw_prompt"]+ preset["preset_enhance_prompt"]
-                    summary["new_chat"] = preset["new_chat_prompt"]
-                    for prompt_name in prompt_name_list:
-                        character_prompt.append(summary[prompt_name])
-                    character_prompts[message_type] =character_prompt
-
+                summary:dict = character_card.display_summary()
+                character_prompts={}
+                if summary["description"] != "":
+                    character_prompts["description"] = "This is {{char}}'s description:"+summary["description"]
+                if summary["personality"] != "":
+                    character_prompts["personality"] = "This is {{char}}'s personality:"+summary["personality"]
+                if summary["scenario"] != "":
+                    character_prompts["scenario"]="This is {{char}}'s scenario:"+summary["scenario"]
+                if summary["first_mes"] != "":
+                    character_prompts["first_mes"]=summary["first_mes"]
                 prompts[character_name] = character_prompts
-                #print(prompts)
 
         return prompts
-
 
 if __name__ == '__main__':
     character = Character()
     # print(character.character_list)
     # print(character.group_character_list)
     # print(character.private_character_list)
-    # print(character.get_prompts_list())
+    print(character.get_prompts_list())
     #character.get_prompts_list()

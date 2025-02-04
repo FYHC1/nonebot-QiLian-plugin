@@ -20,7 +20,7 @@ class Open_Ai:
 
     def __init__(self):
         self.chat_completion_type="Google AI Studio"
-        self.api_url= "https:api.openai.com/v1"
+        self.api_url= "https://generativelanguage.googleapis.com/v1beta/openai/"
         self.api_key= ""
         self.module="gemini-1.5-flash"
         self.max_tokens=1000
@@ -177,7 +177,7 @@ class Open_Ai:
         print("completion_tokens: " + f'{response.usage.completion_tokens}\n')
         print("prompt_tokens: " + f'{response.usage.prompt_tokens}\n')
         print("total_tokens: " + f"{response.usage.total_tokens}")
-        #print(msg)
+        print(msg)
         return msg
 
 

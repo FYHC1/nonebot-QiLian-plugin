@@ -2,7 +2,7 @@
     "chat_completion_type": "Google AI Studio",
     "proxy_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
     "proxy_password": "",
-    "module": "gemini-2.0-flash-exp",
-    "max_tokens": 1000,
+    "module": "gemini-2.0-flash-thinking-exp-1219",
+    "max_tokens": 8192,
     "temperature": 0.7
 }
