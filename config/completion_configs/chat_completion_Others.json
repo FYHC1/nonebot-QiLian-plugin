@@ -1,7 +1,7 @@
 {
     "chat_completion_source": "Others",
-    "api_url": "https://api.together.xyz/v1",
-    "api_key": "60c0cb69687517a9a5496dff9e8f2a01ca25316462decc2da032bddad585cd45",
+    "api_url": "",
+    "api_key": "",
     "module": "deepseek-ai/DeepSeek-R1",
     "max_tokens": 8192,
     "temperature": 1.7,
