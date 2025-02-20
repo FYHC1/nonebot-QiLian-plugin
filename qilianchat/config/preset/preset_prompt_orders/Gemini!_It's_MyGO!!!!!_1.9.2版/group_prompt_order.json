@@ -1,0 +1,69 @@
+{
+  "order": [
+      {
+        "name": "Main Prompt",
+        "identifier": "main",
+        "enabled": true
+      },
+      {
+        "name": "World Info (before)",
+        "identifier": "worldInfoBefore",
+        "enabled": true
+      },
+      {
+        "name": "Char Description",
+        "identifier": "charDescription",
+        "enabled": true
+      },
+      {
+        "name": "Char Personality",
+        "identifier": "charPersonality",
+        "enabled": true
+      },
+      {
+        "name": "Scenario",
+        "identifier": "scenario",
+        "enabled": true
+      },
+      {
+        "name": "Enhance Definitions",
+        "identifier": "enhanceDefinitions",
+        "enabled": false
+      },
+      {
+        "name": "NSFW Prompt",
+        "identifier": "nsfw",
+        "enabled": true
+      },
+      {
+        "name": "World Info (after)",
+        "identifier": "worldInfoAfter",
+        "enabled": true
+      },
+      {
+        "name": "Chat Examples",
+        "identifier": "dialogueExamples",
+        "enabled": true
+      },
+      {
+        "name": "Chat History",
+        "identifier": "chatHistory",
+        "enabled": true
+      },
+      {
+        "name": "⚙️简短回复模式(可选)",
+        "identifier": "c358f8cb-8905-4c2b-9226-3db56ee188e8",
+        "enabled": true
+      },
+      {
+        "name": "🎮开始游戏",
+        "identifier": "jailbreak",
+        "enabled": true
+      },
+      {
+          "name": "🕹️继续",
+          "identifier": "bdd5dfb3-a1e6-42a5-9bd7-eac3851fc0d1",
+          "enabled": true
+        }
+    ]
+}
