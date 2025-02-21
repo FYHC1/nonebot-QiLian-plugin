@@ -1,14 +1,8 @@
-
 import asyncio
 import json
-import os
-import time  # Import time module for delay
-from xmlrpc.client import Error
-
-import openai
-from openai import OpenAI
-from openai import RateLimitError  # Import RateLimitError
-from watchfiles import awatch
+from pathlib import Path
+from typing import List, Dict, Any, Optional, Union
+from openai import OpenAI, RateLimitError, APIError
 
 
 ##
@@ -18,100 +12,195 @@ from watchfiles import awatch
 #Google AI Studio
 #}
 
-class Open_Ai:
+class OpenAi:
+    """OpenAI API客户端类,用于管理API配置和调用
+    
+    Attributes:
+        chat_completion_source (str): 聊天补全来源
+        api_url (str): API基础URL
+        api_keys (List[str]): API密钥列表
+        module (str): 模型名称
+        max_tokens (int): 最大生成token数
+        temperature (float): 采样温度
+        current_key_index (int): 当前API密钥索引
+        max_retries (int): 最大重试次数
+        retry_delay (int): 重试延迟秒数
+    """
 
-    # 文件地址
-    script_dir = os.path.dirname(__file__)
-    config_folder_path = os.path.join(script_dir, "../config/completion_configs")
+    def __init__(self) -> None:
+        """初始化OpenAI客户端"""
+        self.config_path = Path(__file__).parent / "../config/completion_configs"
+        
+        # 默认配置
+        self.chat_completion_source = "Google AI Studio"
+        self.api_url = ""
+        self.api_keys: List[str] = []
+        self.module = ""
+        self.max_tokens = 1000
+        self.temperature = 0.8
+        self.current_key_index = 0
+        self.max_retries = 10
+        self.retry_delay = 3
 
-    def __init__(self):
+        # 加载配置
+        self.from_json()
 
-        self.chat_completion_source= "Google AI Studio" # Default to Google AI Studio
-        self.api_url= ""
-        self.api_keys= [] # Use a list to store API keys for potential polling, even for single key scenarios
-        self.module=""
-        self.max_tokens=1000
-        self.temperature=0.8
-        self.current_key_index = 0 # For API key rotation
-        self.max_retries = 10  # Maximum number of retries for rate limit errors
-        self.retry_delay = 3  # Delay in seconds between retries
+    def set_chat_completion_source(self, source: str) -> None:
+        """设置聊天补全来源
+        
+        Args:
+            source: 补全来源名称
+        """
+        self.chat_completion_source = source
+        self.to_json("chat_completion_source", source)
+        self.from_json()
 
-        self.from_json() # Load configurations from JSON during initialization
-
-
-    def set_chat_completion_source(self, chat_completion_source):
-        self.chat_completion_source=chat_completion_source
-        self.to_json("chat_completion_source", chat_completion_source)
-        self.from_json() # Reload config after changing source to apply relevant settings
-
-    def set_api_url(self, url):
-        self.api_url=url
+    def set_api_url(self, url: str) -> None:
+        """设置API URL
+        
+        Args:
+            url: API基础URL
+        """
+        self.api_url = url
         self.to_json("api_url", url)
 
-    def set_api_key(self, key):
-        # Ensure api_keys is always a list, even if setting a single key.
-        self.api_keys=[key]
-        self.to_json("api_keys", self.api_keys) # Store as api_keys in json, even if single key
+    def set_api_key(self, key: str) -> None:
+        """设置单个API密钥
+        
+        Args:
+            key: API密钥
+        """
+        self.api_keys = [key]
+        self.to_json("api_keys", self.api_keys)
 
-    def set_api_keys(self, keys): # Method to set a list of API keys directly
-        self.api_keys=keys
+    def set_api_keys(self, keys: List[str]) -> None:
+        """设置多个API密钥
+        
+        Args:
+            keys: API密钥列表
+        """
+        self.api_keys = keys
         self.to_json("api_keys", keys)
 
-
-    def set_module(self, module):
-        self.module=module
+    def set_module(self, module: str) -> None:
+        """设置模型名称
+        
+        Args:
+            module: 模型名称
+        """
+        self.module = module
         self.to_json("module", module)
 
-    def set_max_tokens(self, max_tokens):
-        self.max_tokens=max_tokens
+    def set_max_tokens(self, max_tokens: int) -> None:
+        """设置最大生成token数
+        
+        Args:
+            max_tokens: 最大token数
+        """
+        self.max_tokens = max_tokens
         self.to_json("max_tokens", max_tokens)
 
-    def set_temperature(self, temperature):
-        self.temperature=temperature
+    def set_temperature(self, temperature: float) -> None:
+        """设置采样温度
+        
+        Args:
+            temperature: 温度值
+        """
+        self.temperature = temperature
         self.to_json("temperature", temperature)
 
-    def to_json(self,config_name,config):
-        """Writes configuration to the appropriate JSON file based on chat_completion_source."""
+    def to_json(self, config_name: str, config: Any) -> None:
+        """保存配置到JSON文件
+        
+        Args:
+            config_name: 配置项名称
+            config: 配置值
+            
+        Raises:
+            IOError: 保存失败
+        """
         try:
-            with open(os.path.join(self.config_folder_path,f"chat_completion_{self.chat_completion_source}.json"), "r+", encoding='utf-8') as rf:
-                completion_config=json.load(rf)
-                completion_config[config_name]=config
-        except FileNotFoundError:
-            completion_config = {config_name: config} # Create config if file not found
+            config_file = (
+                self.config_path / 
+                f"chat_completion_{self.chat_completion_source}.json"
+            )
+            
+            try:
+                with open(config_file, "r", encoding='utf-8') as f:
+                    completion_config = json.load(f)
+            except FileNotFoundError:
+                completion_config = {}
+                
+            completion_config[config_name] = config
+            
+            config_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(config_file, "w", encoding='utf-8') as f:
+                json.dump(
+                    completion_config,
+                    f,
+                    ensure_ascii=False,
+                    indent=4
+                )
+                
+        except IOError as e:
+            raise IOError(f"保存配置失败: {str(e)}") from e
 
-        with open(os.path.join(self.config_folder_path, f"chat_completion_{self.chat_completion_source}.json"),
-                            "w+",encoding='utf-8') as wf:
-            json.dump(completion_config,wf,ensure_ascii=False,indent=4)
-
-
-    def from_json(self):
-        """Loads configuration from the JSON file corresponding to chat_completion_source."""
+    def from_json(self) -> Dict[str, Any]:
+        """从JSON文件加载配置
+        
+        Returns:
+            Dict[str, Any]: 加载的配置数据
+            
+        Raises:
+            json.JSONDecodeError: JSON格式错误
+        """
         try:
-            with open(os.path.join(self.config_folder_path,f"chat_completion_{self.chat_completion_source}.json"), "r", encoding='utf-8') as f:
-                completion_config=json.load(f)
-                self.chat_completion_source=completion_config.get("chat_completion_source", self.chat_completion_source) # Use get to avoid KeyError and default to current value
-                self.api_url=completion_config.get("api_url", "") # Use get with default
-                self.api_keys=completion_config.get("api_keys", []) # Load api_keys list, default to empty list
-                if not self.api_keys and completion_config.get("api_key"): # For backward compatibility, if api_key exists but api_keys is empty, use api_key
-                    self.api_keys = [completion_config["api_key"]] # Convert single api_key to api_keys list
-                self.module=completion_config.get("module", "") # Use get with default
-                self.max_tokens=completion_config.get("max_tokens", 1000) # Use get with default
-                self.temperature=completion_config.get("temperature", 0.8) # Use get with default
-                self.max_retries = completion_config.get("max_retries", 10) # Load retry config, default to 3
-                self.retry_delay = completion_config.get("retry_delay", 5) # Load retry delay, default to 5
-        except FileNotFoundError:
-            print(f"Warning: Configuration file for '{self.chat_completion_source}' not found. Using default settings.")
-            return {} # Return empty dict to indicate no config loaded, but defaults are used
-        except json.JSONDecodeError:
-            print(f"Error: Configuration file for '{self.chat_completion_source}' is corrupted. Please check the JSON format.")
+            config_file = (
+                self.config_path / 
+                f"chat_completion_{self.chat_completion_source}.json"
+            )
+            
+            if not config_file.exists():
+                print(f"警告: 未找到配置文件 '{self.chat_completion_source}',使用默认配置")
+                return {}
+                
+            with open(config_file, "r", encoding='utf-8') as f:
+                config = json.load(f)
+                
+            # 更新配置
+            self.chat_completion_source = config.get(
+                "chat_completion_source",
+                self.chat_completion_source
+            )
+            self.api_url = config.get("api_url", "")
+            self.api_keys = config.get("api_keys", [])
+            if not self.api_keys and config.get("api_key"):
+                self.api_keys = [config["api_key"]]
+            self.module = config.get("module", "")
+            self.max_tokens = config.get("max_tokens", 1000)
+            self.temperature = config.get("temperature", 0.8)
+            self.max_retries = config.get("max_retries", 10)
+            self.retry_delay = config.get("retry_delay", 5)
+            
+            return config
+            
+        except json.JSONDecodeError as e:
+            print(f"错误: 配置文件 '{self.chat_completion_source}' 格式错误,请检查JSON格式")
             return {}
-        return completion_config # Return loaded config for potential use, though not strictly necessary currently
 
-
-
-    async def start_chat(self,messages):
-        """Initiates chat based on the configured chat completion source."""
-        match self.chat_completion_source.lower(): # Case-insensitive matching
+    async def start_chat(
+        self,
+        messages: List[Dict[str, str]]
+    ) -> str:
+        """启动聊天会话
+        
+        Args:
+            messages: 消息列表
+            
+        Returns:
+            str: 回复消息
+        """
+        match self.chat_completion_source.lower():
             case "openai":
                 return await self.chat_with_openai(messages)
             case "claude":
@@ -120,179 +209,177 @@ class Open_Ai:
                 return await self.chat_with_gemini(messages)
             case "deepseek":
                 return await self.chat_with_openai(messages)
-            case "others": # Fallback to openai if "Others" is selected or for unknown types
-                return await self.chat_with_openai(messages)
-            case _: # Default case for robustness
-                print(f"Warning: Unknown chat completion source '{self.chat_completion_source}'. Defaulting to OpenAI.")
+            case _:
+                print(f"警告: 未知的聊天补全来源 '{self.chat_completion_source}',默认使用OpenAI")
                 return await self.chat_with_openai(messages)
 
-
-    async def chat_with_openai(self,messages):
-        """Chats with OpenAI compatible models, including custom OpenAI endpoints, with rate limit retry."""
+    async def chat_with_openai(
+        self,
+        messages: List[Dict[str, str]]
+    ) -> str:
+        """使用OpenAI API进行聊天
+        
+        Args:
+            messages: 消息列表
+            
+        Returns:
+            str: 回复消息
+            
+        Raises:
+            RateLimitError: 达到速率限制
+            APIError: API调用错误
+        """
         retries = 0
-        while retries <= self.max_retries: # Retry loop
+        while retries <= self.max_retries:
             try:
                 client = OpenAI(
-                    api_key=self.api_keys[0] if self.api_keys else None, # Use the first key if available, handle no key case gracefully
-                    base_url=self.api_url if self.api_url else "https://api.openai.com/v1" # Default base URL if not set
+                    api_key=self.api_keys[0] if self.api_keys else None,
+                    base_url=self.api_url or "https://api.openai.com/v1"
                 )
 
-                HEADERS = {"Content-Type": "application/json"}
-
-                response = client.chat.completions.create( # Use async client
+                response = client.chat.completions.create(
                     model=self.module,
-                    n=1,
                     messages=messages,
-                    extra_headers=HEADERS,
                     max_tokens=self.max_tokens,
-                    temperature=self.temperature
+                    temperature=self.temperature,
+                    extra_headers={"Content-Type": "application/json"}
                 )
 
                 msg = response.choices[0].message.content
-                print(msg)
-                print_usage_info(response.usage) # Print token usage info
-                return msg # Success, return message and break retry loop
+                #print(msg)
+                print_usage_info(response.usage)
+                return msg
 
-            except RateLimitError as e: # Catch RateLimitError specifically
+            except RateLimitError as e:
                 retries += 1
                 if retries > self.max_retries:
-                    print(f"OpenAI RateLimitError: Max retries reached. Error: {e}")
-                    return f"Error: OpenAI Rate Limit - Max retries exceeded. Last error: {e}" # Return error after max retries
-                else:
-                    print(f"OpenAI RateLimitError: Retrying in {self.retry_delay} seconds... (Retry {retries}/{self.max_retries})")
-                    await asyncio.sleep(self.retry_delay) # Wait before retrying
-                    continue # Continue to the next retry attempt
+                    print(f"OpenAI速率限制错误: 达到最大重试次数。错误: {e}")
+                    return f"错误: OpenAI速率限制 - 超过最大重试次数。最后错误: {e}"
+                    
+                print(f"OpenAI速率限制错误: {self.retry_delay}秒后重试... (重试 {retries}/{self.max_retries})")
+                await asyncio.sleep(self.retry_delay)
+                continue
 
-            except openai.APIError as e: # Catch other OpenAI API errors
-                print(f"OpenAI API error: {e}")
-                return f"Error: OpenAI API - {e}" # Return error message to the user
-            except Exception as e: # Catch any other potential exceptions
-                print(f"An unexpected error occurred during OpenAI chat: {e}")
-                return f"Error: Unexpected - {e}"
+            except APIError as e:
+                print(f"OpenAI API错误: {e}")
+                return f"错误: OpenAI API - {e}"
+            except Exception as e:
+                print(f"OpenAI聊天时发生意外错误: {e}")
+                return f"错误: 意外 - {e}"
 
-
-    async def chat_with_gpt(self,messages):
-        """Chats specifically with OpenAI's GPT models using the standard OpenAI endpoint with rate limit retry."""
-        retries = 0
-        while retries <= self.max_retries: # Retry loop
-            try:
-                client = OpenAI(
-                    base_url="https://api.openai.com/v1", # Standard OpenAI base URL
-                    api_key=self.api_keys[0] if self.api_keys else None,
-                )
-
-
-                HEADERS = {"Content-Type": "application/json"}
-                completion = client.chat.completions.create( # Use async client
-                    model=self.module,
-                    messages=messages,
-                    extra_headers=HEADERS,
-                    max_tokens=self.max_tokens,
-                    temperature=self.temperature,
-                )
-
-
-                msg = completion.choices[0].message.content
-                print_usage_info(completion.usage) # Print token usage info
-                return msg # Success, return message and break retry loop
-
-            except RateLimitError as e: # Catch RateLimitError specifically
-                retries += 1
-                if retries > self.max_retries:
-                    print(f"OpenAI RateLimitError: Max retries reached. Error: {e}")
-                    return f"Error: OpenAI Rate Limit - Max retries exceeded. Last error: {e}" # Return error after max retries
-                else:
-                    print(f"OpenAI RateLimitError: Retrying in {self.retry_delay} seconds... (Retry {retries}/{self.max_retries})")
-                    await asyncio.sleep(self.retry_delay) # Wait before retrying
-                    continue # Continue to the next retry attempt
-
-            except openai.APIError as e: # Catch other OpenAI API errors
-                print(f"OpenAI API error: {e}")
-                return f"Error: OpenAI API - {e}"
-            except Exception as e: # Catch other exceptions
-                print(f"An unexpected error occurred during GPT chat: {e}")
-                return f"Error: Unexpected - {e}"
-
-
-
-    async def chat_with_claude(self, messages):
-        """Placeholder for Claude integration using OpenAI format."""
-        print("Warning: Claude integration is a placeholder and might require further implementation to be fully functional.")
-        return "Claude integration is not fully implemented in this version."
-
-
-
-    async def chat_with_gemini(self, messages):
-        """Chats with Google AI Studio (Gemini) models with API key polling and rate limit retry."""
+    async def chat_with_gemini(
+        self,
+        messages: List[Dict[str, str]]
+    ) -> str:
+        """使用Google AI Studio (Gemini) API进行聊天
+        
+        Args:
+            messages: 消息列表
+            
+        Returns:
+            str: 回复消息
+            
+        Raises:
+            RateLimitError: 达到速率限制
+            APIError: API调用错误
+        """
         if not self.api_keys:
-            return "Error: No API keys provided for Google AI Studio."
+            return "错误: 未提供Google AI Studio的API密钥"
 
-        for index in range(len(self.api_keys)): # Iterate through API keys
-            api_key = self.api_keys[(self.current_key_index + index) % len(self.api_keys)] # Rotate through keys
-            retries = 0 # Reset retries for each API key
-            while retries <= self.max_retries: # Retry loop for rate limit
+        for index in range(len(self.api_keys)):
+            api_key = self.api_keys[
+                (self.current_key_index + index) % len(self.api_keys)
+            ]
+            retries = 0
+            
+            while retries <= self.max_retries:
                 try:
                     client = OpenAI(
                         api_key=api_key,
-                        base_url="https://generativelanguage.googleapis.com/v1beta/openai/" # Gemini API base URL
+                        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
                     )
 
-                    HEADERS = {"Content-Type": "application/json"}
-
-                    response = client.chat.completions.create( # Use async client
+                    response = client.chat.completions.create(
                         model=self.module,
-                        n=1,
                         messages=messages,
-                        extra_headers = HEADERS,
-                        max_tokens = self.max_tokens,
-                        temperature = self.temperature
+                        max_tokens=self.max_tokens,
+                        temperature=self.temperature,
+                        extra_headers={"Content-Type": "application/json"}
                     )
-
 
                     msg = response.choices[0].message.content
-                    print_usage_info(response.usage) # Print token usage info
-                    self.current_key_index = (self.current_key_index + index) % len(self.api_keys) # Update key index for next call
-                    return msg # Success, return message and break retry loops
+                    print_usage_info(response.usage)
+                    self.current_key_index = (
+                        self.current_key_index + index
+                    ) % len(self.api_keys)
+                    return msg
 
-                except RateLimitError as e: # Catch RateLimitError specifically
+                except RateLimitError as e:
                     retries += 1
                     if retries > self.max_retries:
-                        print(f"Gemini RateLimitError with key index { (self.current_key_index + index) % len(self.api_keys)}: Max retries reached. Error: {e}")
-                        break # Break retry loop for this key, try next key
-                    else:
-                        print(f"Gemini RateLimitError with key index { (self.current_key_index + index) % len(self.api_keys)}: Retrying in {self.retry_delay} seconds... (Retry {retries}/{self.max_retries})")
-                        await asyncio.sleep(self.retry_delay) # Wait before retrying
-                        continue # Continue to the next retry attempt with the same key
+                        print(
+                            f"Gemini速率限制错误(密钥索引 {(self.current_key_index + index) % len(self.api_keys)}): "
+                            f"达到最大重试次数。错误: {e}"
+                        )
+                        break
+                        
+                    print(
+                        f"Gemini速率限制错误(密钥索引 {(self.current_key_index + index) % len(self.api_keys)}): "
+                        f"{self.retry_delay}秒后重试... (重试 {retries}/{self.max_retries})"
+                    )
+                    await asyncio.sleep(self.retry_delay)
+                    continue
 
-                except openai.APIError as e: # Catch other OpenAI API errors
-                    print(f"Gemini API error with key index { (self.current_key_index + index) % len(self.api_keys)}: {e}")
-                    if index == len(self.api_keys) - 1: # If all keys failed
-                        return f"Error: Gemini API - All API keys failed. Last error: {e}" # Return error after trying all keys
-                    else:
-                        print(f"Trying next API key...") # Inform about key rotation attempt
-                        break # Break retry loop for this key, move to next key
-                except Exception as e: # Catch other exceptions
-                    print(f"An unexpected error occurred during Gemini chat: {e}")
-                    return f"Error: Unexpected - {e}"
-            else: # This 'else' belongs to the 'while retries <= self.max_retries' loop, executed if the loop completes without 'break'
-                continue # If retry loop for a key exhausted, continue to the next API key
-            if index == len(self.api_keys) -1: # If all keys are tried and all failed after retries
-                return f"Error: Gemini API - All API keys failed after multiple retries." # Return error after all keys and retries failed
+                except APIError as e:
+                    print(
+                        f"Gemini API错误(密钥索引 {(self.current_key_index + index) % len(self.api_keys)}): {e}"
+                    )
+                    if index == len(self.api_keys) - 1:
+                        return f"错误: Gemini API - 所有API密钥都失败。最后错误: {e}"
+                    print("尝试下一个API密钥...")
+                    break
+                    
+                except Exception as e:
+                    print(f"Gemini聊天时发生意外错误: {e}")
+                    return f"错误: 意外 - {e}"
+            else:
+                continue
+                
+            if index == len(self.api_keys) - 1:
+                return "错误: Gemini API - 所有API密钥在多次重试后都失败"
 
+    async def chat_with_claude(
+        self,
+        messages: List[Dict[str, str]]
+    ) -> str:
+        """使用Claude API进行聊天(占位)
+        
+        Args:
+            messages: 消息列表
+            
+        Returns:
+            str: 回复消息
+        """
+        print("警告: Claude集成是占位符,可能需要进一步实现才能完全功能")
+        return "此版本未完全实现Claude集成"
 
-def print_usage_info(usage):
-    """Helper function to print token usage information."""
-    print("Usage Info:")
-    print(f"  Completion tokens: {usage.completion_tokens}")
-    print(f"  Prompt tokens: {usage.prompt_tokens}")
-    print(f"  Total tokens: {usage.total_tokens}")
+def print_usage_info(usage: Any) -> None:
+    """打印token使用信息
+    
+    Args:
+        usage: 使用量信息对象
+    """
+    print("使用量信息:")
+    print(f"  补全tokens: {usage.completion_tokens}")
+    print(f"  提示tokens: {usage.prompt_tokens}")
+    print(f"  总tokens: {usage.total_tokens}")
 
 
 if __name__=="__main__":
     # Example Usage and Testing
 
     async def main():
-        open_ai = Open_Ai()
+        open_ai = OpenAi()
         open_ai.set_chat_completion_source("OpenAI") # Or "OpenAI", "Claude", "Others", "Google AI Studio"
         # For Google AI Studio, set multiple API keys if you want to test polling:
         # open_ai.set_api_keys(["YOUR_GEMINI_API_KEY_1", "YOUR_GEMINI_API_KEY_2", "YOUR_GEMINI_API_KEY_3"])

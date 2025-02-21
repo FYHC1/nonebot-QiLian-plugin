@@ -1,83 +1,144 @@
 import json
 import os
-
+from pathlib import Path
+from typing import List, Tuple, Pattern, Optional
 import regex
 
-
-
 class RegexProcessor:
-    def __init__(self):
-        """
-        初始化 RegexProcessor，加载配置文件中的正则表达式。
+    """正则表达式处理器类,用于管理和应用正则表达式规则
+    
+    Attributes:
+        patterns (List[Tuple[Pattern, str]]): 编译后的正则表达式和替换字符串列表
+    """
 
+    def __init__(self) -> None:
+        """初始化正则表达式处理器"""
+        self.patterns: List[Tuple[Pattern, str]] = []
+
+    def get_patterns(self, preset_name: str) -> List[Tuple[Pattern, str]]:
+        """加载预设的正则表达式规则
+        
         Args:
-            config_files (list): JSON 配置文件的列表。
+            preset_name: 预设名称
+            
+        Returns:
+            List[Tuple[Pattern, str]]: 正则表达式和替换字符串列表
+            
+        Raises:
+            FileNotFoundError: 预设目录不存在
+            json.JSONDecodeError: 规则文件格式错误
         """
-        self.patterns = []
+        try:
+            regex_dir = (
+                Path(__file__).parent / 
+                f"../config/preset/preset_regex/{preset_name}"
+            )
+            
+            if not regex_dir.exists():
+                raise FileNotFoundError(f"正则表达式预设目录不存在: {regex_dir}")
 
+            self.patterns = []
+            for file_path in regex_dir.glob("*.json"):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        config = json.load(f)
+                        
+                    if config.get('disabled', False):
+                        continue
+                        
+                    regex_pattern = str(config.get('findRegex', '')).strip('/')
+                    if not regex_pattern:
+                        continue
+                        
+                    replace_string = config['replaceString']
+                    
+                    # 编译正则表达式
+                    pattern = regex.compile(
+                        regex_pattern,
+                        regex.S | regex.I | regex.M | regex.VERSION1
+                    )
+                    self.patterns.append((pattern, replace_string))
+                    
+                except json.JSONDecodeError as e:
+                    raise json.JSONDecodeError(
+                        f"规则文件格式错误 {file_path}: {str(e)}", 
+                        e.doc, 
+                        e.pos
+                    )
+                    
+            return self.patterns
+            
+        except FileNotFoundError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"加载正则表达式规则失败: {str(e)}") from e
 
-    def get_patterns(self,preset_name):
-        script_dir = os.path.dirname(__file__)
-        regex_folder_path = os.path.join(script_dir, f"../config/preset/preset_regex/{preset_name}")
-        preset_folder = os.listdir(regex_folder_path)
-
-        #self.patterns = []
-        for file in preset_folder:
-            with open(os.path.join(regex_folder_path, file), 'r', encoding='utf-8') as f:
-                config: dict = json.load(f)
-                if config.get('disabled', False):
-                    continue
-                regex_pattern = config.get('findRegex', '')
-                replace_string = config['replaceString']
-                substitute_regex = config.get('substituteRegex', 0)
-
-                # if substitute_regex == 1:
-                #     self.patterns.append((regex.compile(rf'{regex_pattern}',regex.S | regex.I | regex.M | regex.VERSION1),replace_string))
-                # else:
-                #     self.patterns.append((regex.compile(rf'{regex_pattern}', regex.S | regex.VERSION1), replace_string))
-                self.patterns.append(
-                    (regex.compile(regex_pattern, regex.S | regex.I | regex.M | regex.VERSION1), replace_string))
-        return self.patterns
-
-    def process(self, text):
+    def process(self, text: str) -> str:
+        """使用已加载的规则处理文本
+        
+        Args:
+            text: 要处理的文本
+            
+        Returns:
+            str: 处理后的文本
+            
+        Raises:
+            RuntimeError: 处理失败
         """
-               对输入文本应用加载的正则表达式规则。
+        try:
+            for pattern, replacement in self.patterns:
+                text = pattern.sub(replacement, text)
+            return text.strip()
+            
+        except Exception as e:
+            raise RuntimeError(f"处理文本失败: {str(e)}") from e
 
-               Args:
-                   text (str): 要处理的输入文本。
+    def process_by_regex(
+        self,
+        regexs: List[Tuple[Pattern, str]],
+        text: str
+    ) -> str:
+        """使用指定的规则处理文本
+        
+        Args:
+            regexs: 正则表达式和替换字符串列表
+            text: 要处理的文本
+            
+        Returns:
+            str: 处理后的文本
+            
+        Raises:
+            RuntimeError: 处理失败
+        """
+        try:
+            for pattern, replacement in regexs:
+                text = pattern.sub(replacement, text)
+            return text.strip()
+            
+        except Exception as e:
+            raise RuntimeError(f"处理文本失败: {str(e)}") from e
 
-               Returns:
-                   str: 处理后的文本。
-               """
-        # source_text = text
-        # processed_text = ""
-        # for script in self.scripts:
-        #     if script.get('disabled', False):
-        #         continue
-        #     regex_pattern: str = script['findRegex']
-        #     replace_string = script['replaceString']
-        #     substitute_regex = script.get('substituteRegex', 0)
-        #     print(regex_pattern)
-        #
-        #
-        #
-        #     # 使用 regex 模块的 sub 方法
-        #     if substitute_regex == 1:
-        #         processed_text = regex.compile(regex_pattern,regex.S | regex.I | regex.M | regex.VERSION1).sub(replace_string, source_text)
-        #     else:
-        #         processed_text = regex.compile(regex_pattern, regex.S | regex.VERSION1).sub(replace_string, source_text)
-
-        """ 按照规则清理文本 """
-        for pattern, replacement in self.patterns:
-            text = pattern.sub(replacement, text)
-        return text.strip()
-
-
-    def process_by_regex(self,regexs,text):
-        """ 按照规则清理文本 """
-        for pattern, replacement in regexs:
-            text = pattern.sub(replacement, text)
-        return text.strip()
+    def validate_regex_config(self, config: dict) -> Tuple[bool, str]:
+        """验证正则表达式配置有效性
+        
+        Args:
+            config: 配置数据
+            
+        Returns:
+            Tuple[bool, str]: (是否有效, 错误信息)
+        """
+        if 'findRegex' not in config:
+            return False, "缺少findRegex字段"
+            
+        if 'replaceString' not in config:
+            return False, "缺少replaceString字段"
+            
+        try:
+            regex.compile(config['findRegex'])
+        except Exception as e:
+            return False, f"正则表达式格式错误: {str(e)}"
+            
+        return True, "验证通过"
 
 if __name__ == '__main__':
     # config_files = [
@@ -97,9 +158,9 @@ Step.当前所处模式：角色扮演模式。
 Step.注意事项：本次创作中，需要特别注意角色塑造的原则，尤其是NPC尤利娅的行为逻辑必须符合其内在目标驱动、立即执行的特性，以及她在情境约束下的果断决策。同时，要严格避免使用禁用词汇，保叙事逻辑的连贯性，并注意衣物逻辑约束和信息认知一致性。
 Step. 情景分析：
 0. Human当前输入: 我……（想要回避尤利娅的目光，却因为尤利娅的威严只好直视她的眼睛，锐利但是充满了关心？）我似乎已经是血族了？那……和你的关系是？但……你对人类的态度……好冷漠（最终还是委地坦白了）
-1. 在场角色：尤利娅（吸血鬼名门家主，穿着黑色蕾丝装饰的哥特式礼服，层叠蓬松的黑色长裙，黑色蕾丝边高跟鞋，纯黑丝袜，佩戴红宝石胸针，银制十字架耳坠），泠泠（被尤利娅视为“家人”，目前 穿着睡衣）。
+1. 在场角色：尤利娅（吸血鬼名门家主，穿着黑色蕾丝装饰的哥特式礼服，层叠蓬松的黑色长裙，黑色蕾丝边高跟鞋，纯黑丝袜，佩戴红宝石胸针，银制十字架耳坠），泠泠（被尤利娅视为"家人"，目前 穿着睡衣）。
 2. 外部环境：夜晚，城堡的起居室，烛光摇曳，壁炉燃烧，气氛悠闲。
-3. 角色内在：尤利娅的目标是建立与泠泠的亲密关系，但她对待人类的冷漠态度与她对泠泠的“爱”形成了矛盾。她将人类视为低等生物，对他们的死亡毫不在意。泠泠对尤利娅的言论感到不适，并委婉地 表达了对尤利娅冷漠态度的疑问。
+3. 角色内在：尤利娅的目标是建立与泠泠的亲密关系，但她对待人类的冷漠态度与她对泠泠的"爱"形成了矛盾。她将人类视为低等生物，对他们的死亡毫不在意。泠泠对尤利娅的言论感到不适，并委婉地 表达了对尤利娅冷漠态度的疑问。
 4. 逻辑一致性评估：尤利娅对泠泠的态度符合她既有的性格，即对人类冷漠，但对视为家人的泠泠表现出关爱。她的言论尽管对泠泠而言过于冷酷，但符合她对人类的看法。
 </thinking>
 [使用简体中文开始创作:]

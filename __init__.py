@@ -10,7 +10,8 @@ from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin.on import on_startswith, on_command, on_message
 from nonebot.rule import to_me
-from .character.character import Character
+from requests import session
+
 from .character.character_card_parser import CharacterCardParser
 from .chat.chat import Chat
 from .chat.chat_session import ChatSession
@@ -18,27 +19,27 @@ from .config import Config
 
 __plugin_meta__ = PluginMetadata(
     name="QiLianChat",
-    description="",
-    usage="",
+    description="基于大语言模型的角色扮演聊天插件",
+    usage="使用 '怜祈 帮助' 查看详细使用说明",
     config=Config,
 )
 
 from .messages.messages import Messages
-from .open_ai.open_ai import Open_Ai
+from .open_ai.open_ai import OpenAi
 from .preset.RegexProcess import RegexProcessor
 from .preset.preset_convert import SillyTavernPreset
-from .preset.preset_manage import PresetManage
+from .preset.QLPreset_manage import QLPresetManager
 
 from .util.character_util import CharacterUtil
-from .util.chat_util import ChatUtil
+from .chat.chat_session_manager import ChatSessionManager
 
 #实例对象
 char_util=CharacterUtil()
 chat=Chat()
-chat_util=ChatUtil()
+chat_util=ChatSessionManager()
 messages=Messages()
 regex_process=RegexProcessor()
-open_ai=Open_Ai()
+open_ai=OpenAi()
 character_list=char_util.get_character_card_list()
 
 
@@ -115,14 +116,16 @@ async def appoint_chat_character(event:MessageEvent,args:Message=CommandArg()):
 
 
 
-#进行角色扮演对话
+
 def groupMessage(event:MessageEvent):
-    if not event.get_plaintext().startswith('/'):
-        return event.message_type=="group"
-    else:
-        return False
+    message = event.get_plaintext()
+    # 如果是群聊消息且不以/开头,则返回True
+    return event.message_type=="group" and not message.startswith('/')
+
 def privateMessage(event:MessageEvent):
-    return event.message_type == "private"
+    message = event.get_plaintext()
+    # 如果是私聊消息且不以/开头,则返回True
+    return event.message_type=="private" and not message.startswith('/')
 
 
 role_play=on_message(rule=groupMessage & to_me(),priority=10,block=True)
@@ -132,11 +135,11 @@ async def group_chat(event:MessageEvent,bot:Bot):
     group_id=str(event.group_id)
     user_id=str(event.user_id)
     message=event.get_plaintext()
-    chat_session = chat_util.get_group_session(group_id)
+    chat_session = chat_util.get_session(message_type,group_id)
     if not chat_session:
         character=char_util.get_character_by_id(message_type,group_id)
         chat_util.preset_manage.set_preset_config(message_type, group_id, "Gemini!_It's_MyGO!!!!!_1.9.2版")
-        chat_session = chat_util.assign_session(message_type,character,group_id)
+        chat_session = chat_util.create_session(message_type,character,group_id)
         chat_session.set_user_id(user_id)
         chat_session.set_preset_regex(regex_process.get_patterns(chat_session.preset_name))
         chat_util.set_group_session(group_id,chat_session)
@@ -159,11 +162,11 @@ async def private_chat(event:MessageEvent,bot:Bot):
     #group_id = str(event.group_id)
     user_id = str(event.user_id)
     message = event.get_plaintext()
-    chat_session = chat_util.get_private_session(user_id)
+    chat_session = chat_util.get_session(message_type,user_id)
     if not chat_session:
         character = char_util.get_character_by_id(message_type, user_id)
         chat_util.preset_manage.set_preset_config(message_type, user_id, "Gemini!_It's_MyGO!!!!!_1.9.2版")
-        chat_session = chat_util.assign_session(message_type, character,user_id)
+        chat_session = chat_util.create_session(message_type, character,user_id)
         chat_session.set_user_id(user_id)
         chat_session.set_preset_regex(regex_process.get_patterns(chat_session.preset_name))
         chat_util.set_private_session(user_id,chat_session)
@@ -449,11 +452,9 @@ async def upload_preset(event: MessageEvent, args: Message = CommandArg()):
                 propmt_order_path = os.path.join(script_dir, f'./config/preset/preset_prompt_orders/{file_name}')
                 if not os.path.exists(propmt_order_path):
                     os.mkdir(os.path.join(propmt_order_path))
-                with open(os.path.join(script_dir,
-                                       f'./config/preset/preset_prompt_orders/{file_name}/private_prompt_order.json'),
-                          'w', encoding='utf-8') as f:
-                    order = {"order": sillytavern_preset.get_prompt_order()[100001]}
-                    json.dump(order, f, indent=4, ensure_ascii=False)
+                    order = {"order": sillytavern_preset.get_prompt_order()["100001"]}
+                    sillytavern_preset.save_prompt_order("private", file_name, order)
+                    sillytavern_preset.save_prompt_order("group", file_name, order)
 
                 await upload_preset_file.send("已上传预设")
             except json.JSONDecodeError:
@@ -485,9 +486,12 @@ async def upload_preset(event: MessageEvent):
                 propmt_order_path=os.path.join(script_dir,f'./config/preset/preset_prompt_orders/{file_name}')
                 if not os.path.exists(propmt_order_path):
                     os.mkdir(os.path.join(propmt_order_path))
-                with open(os.path.join(script_dir,f'./config/preset/preset_prompt_orders/{file_name}/private_prompt_order.json'),'w',encoding='utf-8') as f:
-                    order={"order":sillytavern_preset.get_prompt_order()[100001]}
-                    json.dump(order,f,indent=4,ensure_ascii=False)
+                # with open(os.path.join(script_dir,f'./config/preset/preset_prompt_orders/{file_name}/private_prompt_order.json'),'w',encoding='utf-8') as f:
+                #     order={"order":sillytavern_preset.get_prompt_order()["100001"]}
+                #     json.dump(order,f,indent=4,ensure_ascii=False)
+                    order = {"order": sillytavern_preset.get_prompt_order()["100001"]}
+                    sillytavern_preset.save_prompt_order("private",file_name,order)
+                    sillytavern_preset.save_prompt_order("group",file_name,order)
 
                 #await upload_preset_file.send(private_prompt_manage.get_preset_list())
                 await upload_preset_file.send("已上传预设")
@@ -501,7 +505,7 @@ async def upload_preset(event: MessageEvent):
 check_preset_list=on_command("查看预设列表")
 @check_preset_list.handle()
 async def get_preset_list(event: MessageEvent):
-    preset_list=PresetManage.get_preset_list()
+    preset_list=QLPresetManager.get_preset_list()
     output=""
     for preset in preset_list:
         output += f"{preset}\n"
@@ -520,16 +524,11 @@ async def set_Preset(event: MessageEvent,args: Message = CommandArg()):
         preset_config:dict =json.load(rf)
     with open(preset_config_path,'w+',encoding='utf-8') as wf:
         if message_type=="group":
-            group_id=str(event.group_id)
-            preset_config[message_type][group_id] = preset_name
-            json.dump(preset_config, wf, indent=4, ensure_ascii=False)
-            chat_session:ChatSession=chat_util.get_group_session(group_id)
-            chat_session.set_preset_order_prompts(chat_util.preset_manage.get_order_prompts(message_type,group_id))
-            chat_session.preset_name = chat_util.preset_manage.get_preset_name(message_type, group_id)
+            session_id=str(event.group_id)
         else:
-            user_id=str(event.user_id)
-            preset_config[message_type][user_id] = preset_name
-            json.dump(preset_config, wf, indent=4, ensure_ascii=False)
-            chat_session=chat_util.get_private_session(user_id)
-            chat_session.set_preset_order_prompts(chat_util.preset_manage.get_order_prompts(message_type, user_id))
-            chat_session.preset_name = chat_util.preset_manage.get_preset_name(message_type, user_id)
+            session_id=str(event.user_id)
+        preset_config[message_type][session_id] = preset_name
+        json.dump(preset_config, wf, indent=4, ensure_ascii=False)
+        chat_session=chat_util.get_session(message_type,session_id)
+        chat_session.set_preset_order_prompts(chat_util.preset_manage.get_order_prompts(message_type, session_id))
+        chat_session.preset_name = chat_util.preset_manage.get_preset_name(message_type, session_id)

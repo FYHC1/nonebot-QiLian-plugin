@@ -11,7 +11,6 @@ from nonebot.plugin import PluginMetadata
 from nonebot.plugin.on import on_startswith, on_command, on_message
 from nonebot.rule import to_me
 
-from .character.character import Character  # Unused import, can be removed
 from .character.character_card_parser import CharacterCardParser
 from .chat.chat import Chat
 from .chat.chat_session import ChatSession
@@ -50,15 +49,15 @@ from .messages.messages import Messages
 from .open_ai.open_ai import Open_Ai
 from .preset.RegexProcess import RegexProcessor
 from .preset.preset_convert import SillyTavernPreset
-from .preset.preset_manage import PresetManage
+from .preset.QLPreset_manage import QLPresetManager
 
 from .util.character_util import CharacterUtil
-from .util.chat_util import ChatUtil
+from chat.chat_session_manager import ChatSessionManager
 
 # 实例对象
 char_util = CharacterUtil()
 chat = Chat()
-chat_util = ChatUtil()
+chat_util = ChatSessionManager()
 messages = Messages()
 regex_process = RegexProcessor()
 open_ai = Open_Ai()
@@ -416,7 +415,7 @@ async def upload_preset_handler(event: MessageEvent): # Renamed handler for clar
 check_preset_list = on_command("查看预设列表", priority=5, block=True) # Added priority and block
 @check_preset_list.handle()
 async def get_preset_list(event: MessageEvent):
-    preset_list = PresetManage.get_preset_list()
+    preset_list = QLPresetManager.get_preset_list()
     output = "预设列表:\n" # Added header
     if preset_list:
         output += "\n".join(preset_list) # More efficient string join
@@ -445,7 +444,7 @@ async def set_Preset(event: MessageEvent, args: Message = CommandArg()):
     else:
         chat_user_id = str(event.user_id)
 
-    if preset_name not in PresetManage.get_preset_list(): # Validate preset name
+    if preset_name not in QLPresetManager.get_preset_list(): # Validate preset name
         await set_preset.finish("预设不存在，请先上传预设或查看预设列表。") # Improved message
 
     preset_config.setdefault(message_type, {})[chat_user_id] = preset_name # Use setdefault for safety

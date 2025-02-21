@@ -1,89 +1,132 @@
 import json
 import os
-
+from typing import List, Dict, Any, Optional
+from pathlib import Path
 from pprint import pprint
 
 from ..chat.chat_session import ChatSession
 
 
 class Messages:
-    def __init__(self):
-        self.user_message=""
-        self.nickname=""
-        self.character_name=""
-        self.message_type=""
+    """消息构造器类,用于构建和管理聊天消息
+    
+    Attributes:
+        user_message (str): 用户消息
+        nickname (str): 用户昵称
+        character_name (str): 角色名称
+        message_type (str): 消息类型
+    """
 
-
-
-
+    def __init__(self) -> None:
+        """初始化消息构造器"""
+        self.user_message: str = ""
+        self.nickname: str = ""
+        self.character_name: str = ""
+        self.message_type: str = ""
 
     # 文件地址
     script_dir = os.path.dirname(__file__)
 
-     # 定义消息构造函数
-    async def construct_messages(self,message:str,chat_session:ChatSession,chat_history):
-        messages=[]
-        character=chat_session.get_character()
-        nickname=chat_session.get_nick_name()
-        character_name=character.get_name()
+    async def construct_messages(
+        self,
+        message: str,
+        chat_session: ChatSession,
+        chat_history: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """构造消息列表
+        
+        Args:
+            message: 当前消息
+            chat_session: 聊天会话对象
+            chat_history: 聊天历史记录
+            
+        Returns:
+            List[Dict[str, Any]]: 构造的消息列表
+        """
+        messages = []
+        character = chat_session.get_character()
+        nickname = chat_session.get_nick_name()
+        character_name = character.get_name()
          #description=character.get_description().replace("{{user}}",nickname).replace("{{char}}",character_name)
 
-        order_prompts=chat_session.get_preset_order_prompts()
-        chatHistory_id=order_prompts.index("chatHistory")
-        order_prompts0=order_prompts[0:chatHistory_id]
-        order_prompts1=order_prompts[chatHistory_id+1::]
+        order_prompts = chat_session.get_preset_order_prompts()
+        chatHistory_id = order_prompts.index("chatHistory")
+        order_prompts0 = order_prompts[0:chatHistory_id]
+        order_prompts1 = order_prompts[chatHistory_id+1:]
         #['worldInfoBefore', 'personaDescription', 'charDescription', 'charPersonality',
         # 'scenario', 'worldInfoAfter', 'dialogueExamples', 'chatHistory']
-        replace_prompt_list={
-            'worldInfoBefore':"",
-            'personaDescription':"",
-            'charDescription':character.get_description().replace("{{user}}",nickname).replace("{{char}}",character_name),
-            'charPersonality':character.get_personality().replace("{{user}}", chat_session.get_nick_name()).replace("{{char}}",character.get_name()),
-            'scenario':character.get_scenario().replace("{{user}}", chat_session.get_nick_name()).replace("{{char}}",character.get_name()),
-            'worldInfoAfter':"",
-            'dialogueExamples':character.get_mes_example().replace("{{user}}", str(chat_session.get_nick_name())).replace("{{char}}",str(character.get_name())),
-            'chatHistory':""
+        replace_prompt_list = {
+            'worldInfoBefore': "",
+            'personaDescription': "",
+            'charDescription': character.get_description().replace(
+                "{{user}}", nickname
+            ).replace(
+                "{{char}}", character_name
+            ),
+            'charPersonality': character.get_personality().replace(
+                "{{user}}", nickname
+            ).replace(
+                "{{char}}", character_name
+            ),
+            'scenario': character.get_scenario().replace(
+                "{{user}}", nickname
+            ).replace(
+                "{{char}}", character_name
+            ),
+            'worldInfoAfter': "",
+            'dialogueExamples': character.get_mes_example().replace(
+                "{{user}}", nickname
+            ).replace(
+                "{{char}}", character_name
+            ),
+            'chatHistory': ""
         }
-        for prompt in order_prompts0:
+        for i, prompt in enumerate(order_prompts0):
             if isinstance(prompt, str):
-                index=order_prompts0.index(prompt)
-                if replace_prompt_list[prompt]!="":
-                    order_prompts0[index] = {'role': 'system', 'content': replace_prompt_list[prompt]}
+                if replace_prompt_list[prompt]:
+                    order_prompts0[i] = {
+                        'role': 'system',
+                        'content': replace_prompt_list[prompt]
+                    }
                 else:
-                    order_prompts0[index] = None
+                    order_prompts0[i] = None
             else:
-                prompt["content"] = str(prompt["content"]).replace("{{user}}", self.nickname).replace("{{char}}",
-                                                                                                  self.character_name)
+                prompt["content"] = str(prompt["content"]).replace(
+                    "{{user}}", nickname
+                ).replace(
+                    "{{char}}", character_name
+                )
 
-        for prompt in order_prompts1:
+        for i, prompt in enumerate(order_prompts1):
             if isinstance(prompt, str):
-                index = order_prompts1.index(prompt)
-                if replace_prompt_list[prompt] != "":
-                    order_prompts1[index] = {'role': 'system', 'content': replace_prompt_list[prompt]}
+                if replace_prompt_list[prompt]:
+                    order_prompts1[i] = {
+                        'role': 'system',
+                        'content': replace_prompt_list[prompt]
+                    }
                 else:
-                    order_prompts1[index] = None
+                    order_prompts1[i] = None
             else:
-                prompt["content"] = str(prompt["content"]).replace("{{user}}", chat_session.get_nick_name()).replace("{{char}}",
-                                                                                                      character.get_name())
+                prompt["content"] = str(prompt["content"]).replace(
+                    "{{user}}", nickname
+                ).replace(
+                    "{{char}}", character_name
+                )
     #将历史记录添加为user消息
         first_message = {
                     "role": "assistant",
-                    "content": character.get_first_message().replace("{{user}}", chat_session.get_nick_name()).replace("{{char}}",character.get_name())
+                    "content": character.get_first_message().replace(
+                        "{{user}}", nickname
+                    ).replace(
+                        "{{char}}", character_name
+                    )
                 }
         messages.append(first_message)
         for history_message in chat_history:
-            if history_message["is_user"] == True:
-                recent_message = {
-                    "role": "user",
-                    "content": history_message["msg"]
-                }
-                messages.append(recent_message)
-            else:
-                system_message = {
-                    "role": "assistant",
-                    "content": history_message["msg"]
-                }
-                messages.append(system_message)
+            messages.append({
+                "role": "user" if history_message["is_user"] else "assistant",
+                "content": history_message["msg"]
+            })
 
         user_message = {
             "role": "user",
@@ -91,9 +134,9 @@ class Messages:
         }
         messages.append(user_message)
 
-        messages=order_prompts0+messages+order_prompts1
-        messages=[item for item in messages if item is not None]
-        #pprint(messages,indent=2)
+        messages = order_prompts0 + messages + order_prompts1
+        messages = [item for item in messages if item is not None]
+        pprint(messages,indent=2)
         return messages
 
 
