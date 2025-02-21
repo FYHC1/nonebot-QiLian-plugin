@@ -43,10 +43,10 @@ open_ai=OpenAi()
 character_list=char_util.get_character_card_list()
 
 
-tigger=on_startswith(("怜祈"),ignorecase=True)
-@tigger.handle()
-async def lian_qi():
-   await tigger.finish("正在运行中")
+#tigger=on_startswith(("怜祈"),ignorecase=True)
+#@tigger.handle()
+#async def lian_qi():
+#   await tigger.finish("正在运行中")
 
 
 help_command = on_command("怜祈 帮助", priority=1, block=True)
